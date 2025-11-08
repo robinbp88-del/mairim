@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/mairim/static/css/main.820b42fa.css",
+    "main.js": "/mairim/static/js/main.cbfc8a33.js",
+    "static/js/488.4011b791.chunk.js": "/mairim/static/js/488.4011b791.chunk.js",
+    "index.html": "/mairim/index.html",
+    "main.820b42fa.css.map": "/mairim/static/css/main.820b42fa.css.map",
+    "main.cbfc8a33.js.map": "/mairim/static/js/main.cbfc8a33.js.map",
+    "488.4011b791.chunk.js.map": "/mairim/static/js/488.4011b791.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.820b42fa.css",
+    "static/js/main.cbfc8a33.js"
+  ]
+}
