@@ -36,3 +36,48 @@
     transform: rotate(360deg);
   }
 }
+.app-container {
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to bottom, #f0f4ff, #ffffff);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.app-header {
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+}
+
+.app-header p {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-image {
+  width: 250px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.avatar-image:hover {
+  transform: scale(1.05);
+}
+
+.caption {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #333;
+}

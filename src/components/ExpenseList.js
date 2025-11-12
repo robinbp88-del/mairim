@@ -1,20 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import ReceiptScanner from './ReceiptScanner';
+// src/components/ExpenseList.js
+import React from 'react';
 
 function ExpenseList({ expenses, setExpenses }) {
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [balance, setBalance] = useState('');
-  const [savedMessage, setSavedMessage] = useState(false);
-
-  // Sikrer at alle utgifter har isPaid-felt
-  useEffect(() => {
-    const updated = expenses.map((e) =>
-      e.hasOwnProperty('isPaid') ? e : { ...e, isPaid: false }
-    );
-    setExpenses(updated);
-  }, []);
+  const [name, setName] = React.useState('');
+  const [amount, setAmount] = React.useState('');
+  const [category, setCategory] = React.useState('');
+  const [savedMessage, setSavedMessage] = React.useState(false);
 
   const handleAdd = () => {
     if (!name || !amount || !category) return;
@@ -55,69 +46,54 @@ function ExpenseList({ expenses, setExpenses }) {
   };
 
   const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const unpaidTotal = expenses
-    .filter((e) => !e.isPaid)
-    .reduce((sum, e) => sum + e.amount, 0);
-  const available = parseFloat(balance || 0) - unpaidTotal;
 
   return (
-    <div>
-      <h3>📋 Utgifter</h3>
+    <div style={{ backgroundColor: '#1e1e1e', padding: '16px', borderRadius: '8px' }}>
+      <p style={{ color: '#f0f0f0' }}><strong>Totale utgifter:</strong> kr {total}</p>
 
-      <label>💰 Nåværende saldo:</label>
-      <input
-        type="number"
-        value={balance}
-        onChange={(e) => setBalance(e.target.value)}
-        placeholder="F.eks. 10000"
-      />
-
-      <p><strong>Totale utgifter:</strong> kr {total}</p>
-      <p><strong>Disponibelt beløp:</strong> kr {available}</p>
-
-      <h4>➕ Legg til utgift</h4>
+      <h4 style={{ color: '#f0f0f0' }}>➕ Legg til utgift</h4>
       <input
         type="text"
         placeholder="Navn"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        style={{ marginRight: '8px', padding: '6px', backgroundColor: '#2c2c2c', color: '#f0f0f0', border: '1px solid #555', borderRadius: '4px' }}
       />
       <input
         type="number"
         placeholder="Beløp"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
+        style={{ marginRight: '8px', padding: '6px', backgroundColor: '#2c2c2c', color: '#f0f0f0', border: '1px solid #555', borderRadius: '4px' }}
       />
       <input
         type="text"
         placeholder="Kategori"
         value={category}
         onChange={(e) => setCategory(e.target.value)}
+        style={{ marginRight: '8px', padding: '6px', backgroundColor: '#2c2c2c', color: '#f0f0f0', border: '1px solid #555', borderRadius: '4px' }}
       />
-      <button onClick={handleAdd}>Legg til</button>
+      <button
+        onClick={handleAdd}
+        style={{ backgroundColor: '#4caf50', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+      >
+        Legg til
+      </button>
 
       {savedMessage && (
-        <div style={{ marginTop: '12px', color: 'green' }}>
+        <div style={{ marginTop: '12px', color: '#4caf50' }}>
           ✅ Utgiften er lagret!
         </div>
       )}
 
-      <h4>📌 Registrerte utgifter</h4>
+      <h4 style={{ marginTop: '24px', color: '#f0f0f0' }}>📌 Registrerte utgifter</h4>
       {expenses.length === 0 ? (
-        <p>Ingen utgifter registrert.</p>
+        <p style={{ color: '#aaa' }}>Ingen utgifter registrert.</p>
       ) : (
         <>
           <button
             onClick={handleMarkAllPaid}
-            style={{
-              marginBottom: '12px',
-              backgroundColor: '#2196f3',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            style={{ marginBottom: '12px', backgroundColor: '#2196f3', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
           >
             Merk alle som betalt
           </button>
@@ -128,10 +104,11 @@ function ExpenseList({ expenses, setExpenses }) {
                 key={index}
                 style={{
                   marginBottom: '10px',
-                  padding: '8px',
-                  backgroundColor: e.isPaid ? '#e0f7e9' : '#fff',
-                  border: '1px solid #ccc',
-                  borderRadius: '6px',
+                  padding: '12px',
+                  backgroundColor: e.isPaid ? '#2e4d3f' : '#2c2c2c',
+                  color: '#f0f0f0',
+                  border: '1px solid #444',
+                  borderRadius: '6px'
                 }}
               >
                 <strong>{e.name}</strong> – kr {e.amount} ({e.category})
@@ -144,7 +121,7 @@ function ExpenseList({ expenses, setExpenses }) {
                     border: 'none',
                     padding: '4px 10px',
                     borderRadius: '4px',
-                    cursor: 'pointer',
+                    cursor: 'pointer'
                   }}
                 >
                   {e.isPaid ? 'Betalt' : 'Ubetalt'}
@@ -158,7 +135,7 @@ function ExpenseList({ expenses, setExpenses }) {
                     border: 'none',
                     padding: '4px 10px',
                     borderRadius: '4px',
-                    cursor: 'pointer',
+                    cursor: 'pointer'
                   }}
                 >
                   Fjern

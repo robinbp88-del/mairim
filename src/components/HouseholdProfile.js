@@ -1,87 +1,117 @@
 import React, { useState } from 'react';
 
-function HouseholdProfile({ profile, setProfile, setBalance }) {
-  const [adults, setAdults] = useState(profile.adults || 0);
-  const [children, setChildren] = useState(profile.children || 0);
-  const [diet, setDiet] = useState(profile.diet || 'standard');
-  const [income, setIncome] = useState(profile.income || '');
-  const [nextPayoutDate, setNextPayoutDate] = useState(profile.nextPayoutDate || '');
-  const [savedMessage, setSavedMessage] = useState(false);
-const handleIncomeChange = (e) => {
-  const value = e.target.value;
-  setProfile(prev => ({ ...prev, income: value }));
-  setBalance(value); // ← dette er viktig!
-};
+function HouseholdProfile({ profile, setProfile }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localProfile, setLocalProfile] = useState({
+    adults: profile.adults || 1,
+    children: profile.children || 0,
+    diet: profile.diet || 'vanlig',
+    income: profile.income || '',
+    nextPayoutDate: profile.nextPayoutDate || ''
+  });
+
+  const kostnadsfaktor = {
+    vanlig: 1,
+    vegetar: 0.9,
+    vegan: 0.85,
+    lavkarbo: 1.1
+  };
+
+  const dietFaktor = kostnadsfaktor[localProfile.diet] || 1;
+  const matPerVoksen = 3000 * dietFaktor;
+  const matPerBarn = 1800 * dietFaktor;
+  const matUtgiftAnbefalt = Math.round(localProfile.adults * matPerVoksen + localProfile.children * matPerBarn);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setLocalProfile(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSave = () => {
-    const updatedProfile = {
-      adults,
-      children,
-      diet,
-      income,
-      nextPayoutDate,
-    };
-
-    setProfile(updatedProfile);
-    setSavedMessage(true);
-
-    setTimeout(() => {
-      setSavedMessage(false);
-    }, 3000); // Fader bort etter 3 sekunder
+    setProfile(localProfile);
+    setIsEditing(false);
   };
 
   return (
-    <div>
-      <h3>Husholdningsprofil</h3>
-      <label>Antall voksne:</label>
-      <input
-        type="number"
-        value={adults}
-        onChange={(e) => setAdults(parseInt(e.target.value))}
-      />
+    <div style={{ padding: '16px', backgroundColor: '#1e1e1e', borderRadius: '8px' }}>
+      <h3>👨‍👩‍👧 Husholdningsprofil</h3>
 
-      <label>Antall barn:</label>
-      <input
-        type="number"
-        value={children}
-        onChange={(e) => setChildren(parseInt(e.target.value))}
-      />
-<input
-  type="number"
-  value={profile.income || ''}
-  onChange={handleIncomeChange}
-/>
+      {isEditing ? (
+        <>
+          <div>
+            <label>Voksne:</label>
+            <input
+              type="number"
+              name="adults"
+              value={localProfile.adults}
+              onChange={handleChange}
+              style={{ marginLeft: '8px' }}
+            />
+          </div>
+          <div>
+            <label>Barn:</label>
+            <input
+              type="number"
+              name="children"
+              value={localProfile.children}
+              onChange={handleChange}
+              style={{ marginLeft: '8px' }}
+            />
+          </div>
+          <div>
+            <label>Kosthold:</label>
+            <select
+              name="diet"
+              value={localProfile.diet}
+              onChange={handleChange}
+              style={{ marginLeft: '8px' }}
+            >
+              <option value="vanlig">Vanlig</option>
+              <option value="vegetar">Vegetar</option>
+              <option value="vegan">Vegan</option>
+              <option value="lavkarbo">Lavkarbo</option>
+            </select>
+          </div>
+          <div>
+            <label>Inntekt:</label>
+            <input
+              type="number"
+              name="income"
+              value={localProfile.income}
+              onChange={handleChange}
+              style={{ marginLeft: '8px' }}
+            />
+          </div>
+          <div>
+            <label>Neste utbetaling:</label>
+            <input
+              type="date"
+              name="nextPayoutDate"
+              value={localProfile.nextPayoutDate}
+              onChange={handleChange}
+              style={{ marginLeft: '8px' }}
+            />
+          </div>
+          <button onClick={handleSave} style={{ marginTop: '12px' }}>Lagre profil</button>
+        </>
+      ) : (
+        <>
+          <p><strong>Voksne:</strong> {localProfile.adults}</p>
+          <p><strong>Barn:</strong> {localProfile.children}</p>
+          <p><strong>Kosthold:</strong> {localProfile.diet}</p>
+          <p><strong>Inntekt:</strong> kr {localProfile.income}</p>
+          <p><strong>Neste utbetaling:</strong> {localProfile.nextPayoutDate}</p>
 
-      <label>Kosthold:</label>
-      <select value={diet} onChange={(e) => setDiet(e.target.value)}>
-        <option value="standard">Standard</option>
-        <option value="vegetar">Vegetar</option>
-        <option value="lavbudsjett">Lavbudsjett</option>
-      </select>
+          <p style={{ marginTop: '12px' }}>
+            🍽️ <strong>Anbefalt matbudsjett:</strong> kr {matUtgiftAnbefalt}
+          </p>
 
-      <label>Månedlig inntekt (valgfritt):</label>
-      <input
-        type="number"
-        value={income}
-        onChange={(e) => setIncome(e.target.value)}
-      />
-
-      <label>Neste utbetalingsdato (valgfritt):</label>
-      <input
-        type="date"
-        value={nextPayoutDate}
-        onChange={(e) => setNextPayoutDate(e.target.value)}
-      />
-
-      <button onClick={handleSave}>Lagre profil</button>
-
-      {savedMessage && (
-        <div style={{ marginTop: '12px', color: 'green', transition: 'opacity 0.5s' }}>
-          ✅ Profilen er lagret!
-        </div>
+          <button onClick={() => setIsEditing(true)} style={{ marginTop: '12px' }}>Rediger profil</button>
+        </>
       )}
     </div>
   );
 }
 
 export default HouseholdProfile;
+

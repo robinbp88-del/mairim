@@ -1,0 +1,104 @@
+/* src/OnboardingFlow.module.css */
+
+.container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0d0d0d 100%);
+  color: #f0f0f0;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: visible;
+}
+
+.matrixCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.welcome {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.welcomeContent {
+  text-align: center;
+  max-width: 600px;
+  padding: 48px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #00f0ff;
+  border-radius: 16px;
+  box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00c8;
+  animation: pulseGlow 3s infinite, fadeIn 1.5s ease-out;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.avatarWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.avatarLarge {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  margin-bottom: 24px;
+  box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00c8;
+  animation: pulseGlow 3s infinite;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.startButton {
+  background: linear-gradient(135deg, #00c2a8, #ff00c8);
+  color: white;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 24px;
+  font-weight: bold;
+  box-shadow: 0 0 14px #00f0ff;
+  animation: pulseButton 2s infinite;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.startButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 24px #ff00c8;
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00c8;
+  }
+  50% {
+    box-shadow: 0 0 50px #00f0ff, 0 0 80px #ff00c8;
+  }
+}
+
+@keyframes pulseButton {
+  0%, 100% { box-shadow: 0 0 14px #00f0ff; }
+  50% { box-shadow: 0 0 28px #ff00c8; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
