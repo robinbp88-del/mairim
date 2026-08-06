@@ -1,6 +1,9 @@
 {
   "short_name": "Mairim",
-  "name": "Mairim – budsjettassistent",
+  "name": "Mairim - budsjettassistent",
+  "description": "Personlig budsjettassistent. Data lagres lokalt i nettleseren din.",
+  "lang": "nb",
+  "id": "/",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,16 +13,27 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "logo512-maskable.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#0d0d0d",
-  "background_color": "#0d0d0d"
+  "orientation": "portrait-primary",
+  "theme_color": "#09090b",
+  "background_color": "#09090b",
+  "categories": ["finance", "lifestyle"]
 }
