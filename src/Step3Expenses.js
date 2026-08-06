@@ -1,6 +1,9 @@
 // src/Step3Expenses.js
 import React, { useState } from 'react';
+import { Banknote, Receipt } from 'lucide-react';
 import ExpenseList from './components/ExpenseList';
+import IconHeading from './components/ui/IconHeading';
+import { ICON_SIZE, ICON_STROKE } from './components/ui/iconProps';
 import layout from './Step.module.css';
 
 function Step3Expenses({ profile, setProfile, onNext, onBack }) {
@@ -8,12 +11,12 @@ function Step3Expenses({ profile, setProfile, onNext, onBack }) {
 
   const handleNext = () => {
     const totalExpenses = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-    const unpaidExpenses = expenses.filter(e => !e.paid); // 👈 filtrer ubetalte
+    const unpaidExpenses = expenses.filter(e => !e.paid);
     setProfile({
       ...profile,
       expenses,
       expensesTotal: totalExpenses,
-      unpaidExpenses // 👈 lagre separat
+      unpaidExpenses
     });
     onNext();
   };
@@ -27,10 +30,14 @@ function Step3Expenses({ profile, setProfile, onNext, onBack }) {
 
   return (
     <div className={layout.stepContainer}>
-      <h2>📉 Steg 3: Utgifter</h2>
+      <IconHeading icon={Receipt}>Utgifter</IconHeading>
+      <p className={layout.muted}>Legg til faste utgifter, eller hopp over.</p>
 
-      <p style={{ marginBottom: '12px' }}>
-        💰 <strong>Disponibelt beløp:</strong> {formatCurrency(available)}
+      <p className={layout.metaRow}>
+        <Banknote size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
+        <span>
+          <strong>Disponibelt beløp:</strong> {formatCurrency(available)}
+        </span>
       </p>
 
       <ExpenseList
@@ -39,16 +46,13 @@ function Step3Expenses({ profile, setProfile, onNext, onBack }) {
         profile={profile}
       />
 
-      <div style={{ marginTop: '24px' }}>
-        <button onClick={onBack} className={layout.nextButton}>Tilbake</button>
-        <button onClick={handleNext} className={layout.nextButton}>Neste</button>
+      <div className={layout.buttonRow}>
+        <button type="button" onClick={onBack} className={layout.secondaryButton}>Tilbake</button>
+        <button type="button" onClick={handleNext} className={layout.secondaryButton}>Hopp over</button>
+        <button type="button" onClick={handleNext} className={layout.nextButton}>Neste</button>
       </div>
     </div>
   );
 }
 
 export default Step3Expenses;
-
-
-
-

@@ -1,5 +1,9 @@
 // src/Step6Budget.js
 import React, { useEffect, useState } from 'react';
+import { AlertCircle, Lightbulb, PieChart } from 'lucide-react';
+import IconHeading from './components/ui/IconHeading';
+import { buildBudgetPlan } from './utils/budgetEngine';
+import { ensureActivePeriod } from './utils/periodEngine';
 import layout from './Step.module.css';
 
 function Step6Budget({ profile, setProfile, onNext, onBack }) {
@@ -7,129 +11,85 @@ function Step6Budget({ profile, setProfile, onNext, onBack }) {
   const [periodeStart, setPeriodeStart] = useState(null);
   const [periodeSlutt, setPeriodeSlutt] = useState(null);
   const [balance, setBalance] = useState(profile.balance || '');
-  const goals = profile.goals || [];
-
-  const kostnadsfaktor = {
-    vanlig: 1,
-    vegetar: 0.9,
-    vegan: 0.85,
-    lavkarbo: 1.1
-  };
-
-  const dietFaktor = kostnadsfaktor[profile?.diet] || 1;
-  const matPerVoksen = 3000 * dietFaktor;
-  const matPerBarn = 1800 * dietFaktor;
-  const matUtgiftAnbefalt = Math.round((profile?.adults || 1) * matPerVoksen + (profile?.children || 0) * matPerBarn);
 
   useEffect(() => {
     if (!balance || !profile?.nextPayoutDate || !profile?.adults) return;
 
-    const rawBalance = parseFloat(balance);
-    const payoutDate = new Date(profile.nextPayoutDate);
-    const today = new Date();
-    const daysLeft = Math.max(1, Math.ceil((payoutDate - today) / (1000 * 60 * 60 * 24)));
+    const next = buildBudgetPlan(profile, balance);
+    if (!next) return;
 
-    const aktiveMål = goals.filter(g => g.active);
-    const månedligSparingForeslått = aktiveMål.reduce((sum, goal) => {
-      const deadline = new Date(goal.targetDate);
-      const monthsLeft = Math.max(1, (deadline.getFullYear() - today.getFullYear()) * 12 + (deadline.getMonth() - today.getMonth()));
-      const remaining = Math.max(0, goal.price - (goal.saved || 0));
-      return sum + Math.ceil(remaining / monthsLeft);
-    }, 0);
-
-    // Buffer for faste utgifter og mat
-    const boligBuffer = rawBalance * 0.3;
-    const transportBuffer = rawBalance * 0.1;
-    const fritidBuffer = rawBalance * 0.25;
-    const minimumBuffer = boligBuffer + transportBuffer + matUtgiftAnbefalt;
-
-    const justertSparing = rawBalance > minimumBuffer + 1000
-      ? Math.min(månedligSparingForeslått, rawBalance - minimumBuffer)
-      : 0;
-
-    const available = Math.max(0, rawBalance - justertSparing);
-    const daily = Math.floor(available / daysLeft);
-    const weekly = Math.min(daily * 7, available); // realistisk ukebudsjett
-
-    // Fordeling som aldri overstiger available
-    const bolig = Math.round(available * 0.3);
-    const transport = Math.round(available * 0.1);
-    const fritid = Math.round(available * 0.25);
-    const matRest = available - (bolig + transport + fritid);
-    const mat = Math.max(0, Math.min(matUtgiftAnbefalt, matRest));
-
-    const distribution = {
-      Bolig: bolig,
-      Mat: mat,
-      Transport: transport,
-      Sparing: justertSparing,
-      Fritid: fritid,
-    };
-
-    const start = new Date(payoutDate);
-    start.setMonth(start.getMonth() - 1);
-
-    const kommentar = justertSparing < månedligSparingForeslått
-      ? `Sparingen er justert ned fra kr ${månedligSparingForeslått} til kr ${justertSparing} fordi det er ${daysLeft} dager igjen til neste utbetaling og saldoen bør dekke nødvendige utgifter først.`
-      : `Sparingen er satt til kr ${justertSparing} i tråd med dine aktive mål.`
-
-    setPeriodeStart(start);
-    setPeriodeSlutt(payoutDate);
-
-    setPlan({
-      rawBalance,
-      månedligSparing: justertSparing,
-      available,
-      daily,
-      weekly,
-      distribution,
-      daysLeft,
-      kommentar
-    });
-  }, [balance, goals, profile]);
+    setPeriodeStart(next.periodeStart);
+    setPeriodeSlutt(next.periodeSlutt);
+    setPlan(next);
+  }, [balance, profile]);
 
   if (!balance || !profile?.nextPayoutDate || !profile?.adults) {
     return (
       <div className={layout.stepContainer}>
-        <h3>📐 Budsjettforslag</h3>
-        <p>⚠️ Mangler nødvendig data:</p>
-        <ul>
-          {!balance && <li>– Ingen saldo registrert</li>}
-          {!profile?.nextPayoutDate && <li>– Neste utbetalingsdato mangler</li>}
-          {!profile?.adults && <li>– Antall voksne ikke satt</li>}
+        <IconHeading icon={PieChart} as="h3">Budsjettforslag</IconHeading>
+        <p className={layout.metaRow}>
+          <AlertCircle size={20} strokeWidth={1.75} aria-hidden="true" />
+          <span>Mangler nødvendig data</span>
+        </p>
+        <ul className={layout.list}>
+          {!balance && <li className={layout.listItem}>Ingen saldo registrert</li>}
+          {!profile?.nextPayoutDate && <li className={layout.listItem}>Neste utbetalingsdato mangler</li>}
+          {!profile?.adults && <li className={layout.listItem}>Antall voksne ikke satt</li>}
         </ul>
         <p>Oppdater husholdningsprofilen og saldoen for å aktivere budsjettplanleggeren.</p>
-        <button onClick={onBack} className={layout.nextButton}>Tilbake</button>
+        <button type="button" onClick={onBack} className={layout.secondaryButton}>Tilbake</button>
       </div>
     );
   }
 
   if (!plan || !periodeStart || !periodeSlutt) return null;
 
+  const handleFinish = () => {
+    const bal = parseFloat(balance) || 0;
+    setProfile((prev) => {
+      const merged = {
+        ...prev,
+        balance: bal,
+        onboardingComplete: true,
+        budgetPlan: plan,
+      };
+      return ensureActivePeriod(merged);
+    });
+    onNext();
+  };
+
   return (
     <div className={layout.stepContainer}>
-      <h2>📐 Steg 6: Budsjettforslag</h2>
+      <IconHeading icon={PieChart}>Budsjettforslag</IconHeading>
       <p><strong>Saldo:</strong> kr {plan.rawBalance}</p>
       <p><strong>Dager til neste utbetaling:</strong> {plan.daysLeft} dager</p>
-      <p><strong>Månedlig sparing (justert):</strong> kr {plan.månedligSparing}</p>
+      <p><strong>Sparing denne perioden:</strong> kr {plan.månedligSparing}</p>
       <p><strong>Disponibelt beløp etter sparing:</strong> kr {plan.available}</p>
       <p><strong>Daglig budsjett:</strong> kr {plan.daily}</p>
       <p><strong>Ukentlig budsjett:</strong> kr {plan.weekly}</p>
+      <p><strong>Forventet saldo ved neste lønn:</strong> kr {plan.expectedAtPayday}</p>
+      {plan.assessment && (
+        <p><strong>{plan.assessment.title}:</strong> {plan.assessment.blurb}</p>
+      )}
 
-      <h4 style={{ marginTop: '20px' }}>📊 Fordeling</h4>
-      <ul style={{ paddingLeft: '20px' }}>
+      <IconHeading icon={PieChart} as="h4">Fordeling</IconHeading>
+      <ul className={layout.list}>
         {Object.entries(plan.distribution).map(([key, value]) => (
-          <li key={key}>{key}: kr {value}</li>
+          <li key={key} className={layout.listItem}>{key}: kr {value}</li>
         ))}
       </ul>
 
-      <div style={{ marginTop: '20px', fontStyle: 'italic', color: '#ccc' }}>
-        💡 <strong>AI-kommentar:</strong> {plan.kommentar}
-      </div>
+      <p className={layout.hint}>
+        <span className={layout.metaRow}>
+          <Lightbulb size={20} strokeWidth={1.75} aria-hidden="true" />
+          <strong>Kommentar:</strong>
+        </span>
+        {' '}{plan.kommentar}
+      </p>
 
-      <div style={{ marginTop: '24px' }}>
-        <button onClick={onBack} className={layout.nextButton}>Tilbake</button>
-        <button onClick={onNext} className={layout.nextButton}>Fullfør</button>
+      <div className={layout.buttonRow}>
+        <button type="button" onClick={onBack} className={layout.secondaryButton}>Tilbake</button>
+        <button type="button" onClick={handleFinish} className={layout.nextButton}>Fullfør</button>
       </div>
     </div>
   );

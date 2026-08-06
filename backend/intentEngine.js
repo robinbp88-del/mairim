@@ -1,94 +1,90 @@
-const fetch = require('node-fetch');
+/**
+ * Regelbasert tolking av økonomiske meldinger.
+ * Ingen LLM / Ollama — kun mønstre og tall.
+ */
 
-async function interpretMessage(message) {
-  const prompt = `
-Du er en økonomisk assistent. Brukeren skriver meldinger som:
-
-- "jeg brukte 300 kr på mat"
-- "jeg fikk lønn på 25 000"
-- "jeg vil spare 5000 til ferie"
-- "vi er 2 voksne og 1 barn"
-- "målet mitt er å bruke maks 5000 på mat"
-- "jeg lastet opp kvittering på 120 kr for strøm"
-
-Du skal alltid svare med et gyldig JSON-objekt som beskriver meldingen. Ikke forklar, ikke småprat. Ikke bruk emojis, kommentarer eller tekst utenfor JSON.
-
-Svar kun med JSON. Her er eksempler:
-
-Input: "jeg brukte 300 kr på mat"
-Svar:
-{
-  "type": "utgift",
-  "kategori": "mat",
-  "beløp": 300
+function parseAmount(text) {
+  const match = String(text).replace(/\s/g, ' ').match(/(\d[\d\s]*)(?:\s*kr)?/i);
+  if (!match) return null;
+  const amount = parseInt(match[1].replace(/\s/g, ''), 10);
+  return Number.isNaN(amount) ? null : amount;
 }
 
-Input: "jeg fikk lønn på 25 000"
-Svar:
-{
-  "type": "inntekt",
-  "kilde": "lønn",
-  "beløp": 25000
-}
-
-Input: "jeg vil spare 5000 til ferie"
-Svar:
-{
-  "type": "sparemål",
-  "mål": "ferie",
-  "beløp": 5000
-}
-
-Input: "vi er 2 voksne og 1 barn"
-Svar:
-{
-  "type": "profil",
-  "voksne": 2,
-  "barn": 1
-}
-
-Input: "målet mitt er å bruke maks 5000 på mat"
-Svar:
-{
-  "type": "månedsmål",
-  "kategori": "mat",
-  "maksbeløp": 5000
-}
-
-Input: "jeg lastet opp kvittering på 120 kr for strøm"
-Svar:
-{
-  "type": "kvittering",
-  "kategori": "strøm",
-  "beløp": 120
-}
-
-Input: "${message}"
-Svar:
-`;
-
-  const response = await fetch('http://localhost:11434/api/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'mistral',
-      prompt,
-      stream: false
-    })
-  });
-
-  const result = await response.json();
-  console.log('🧠 Modellens svar:', result.response);
-
-  try {
-    const jsonStart = result.response.indexOf('{');
-    const jsonEnd = result.response.lastIndexOf('}') + 1;
-    const jsonText = result.response.slice(jsonStart, jsonEnd);
-    return JSON.parse(jsonText);
-  } catch (err) {
-    console.error('❌ Feil ved parsing av modellens svar:', result.response);
-    throw err;
+function interpretMessage(message) {
+  const text = String(message || '').trim().toLowerCase();
+  if (!text) {
+    return { type: 'feltering', error: 'Tom melding' };
   }
+
+  // Utgift: "brukte 300 kr på mat", "betalte 120 for strøm"
+  const expenseMatch = text.match(/(?:brukte|betalte|kjøpte|la ut)\s+(\d[\d\s]*)\s*(?:kr)?\s*(?:på|for|til)?\s*(.+)?/i);
+  if (expenseMatch) {
+    const beløp = parseInt(expenseMatch[1].replace(/\s/g, ''), 10);
+    const kategori = (expenseMatch[2] || 'annet').trim().replace(/\.$/, '') || 'annet';
+    return { type: 'utgift', kategori, beløp };
+  }
+
+  // Kvittering
+  if (text.includes('kvittering')) {
+    const beløp = parseAmount(text);
+    const kategoriMatch = text.match(/(?:for|på)\s+([a-zæøå]+)/i);
+    return {
+      type: 'kvittering',
+      kategori: kategoriMatch ? kategoriMatch[1] : 'annet',
+      beløp: beløp || 0,
+    };
+  }
+
+  // Inntekt / lønn
+  if (/(?:lønn|inntekt|fikk|tjente)/.test(text)) {
+    const beløp = parseAmount(text);
+    if (beløp != null) {
+      return { type: 'inntekt', kilde: text.includes('lønn') ? 'lønn' : 'inntekt', beløp };
+    }
+  }
+
+  // Sparemål: "spare 5000 til ferie"
+  const saveMatch = text.match(/(?:spare|sparemål|spare til)\s+(\d[\d\s]*)\s*(?:kr)?\s*(?:til|på)?\s*(.+)?/i);
+  if (saveMatch || (text.includes('spare') && parseAmount(text) != null)) {
+    const beløp = saveMatch
+      ? parseInt(saveMatch[1].replace(/\s/g, ''), 10)
+      : parseAmount(text);
+    const mål = (saveMatch && saveMatch[2] ? saveMatch[2] : 'sparemål').trim().replace(/\.$/, '');
+    return { type: 'sparemål', mål: mål || 'sparemål', beløp: beløp || 0 };
+  }
+
+  // Profil: "2 voksne og 1 barn"
+  const adultsMatch = text.match(/(\d+)\s*voksne/);
+  const childrenMatch = text.match(/(\d+)\s*barn/);
+  if (adultsMatch || childrenMatch) {
+    return {
+      type: 'profil',
+      voksne: adultsMatch ? parseInt(adultsMatch[1], 10) : 1,
+      barn: childrenMatch ? parseInt(childrenMatch[1], 10) : 0,
+    };
+  }
+
+  // Månedsmål: "maks 5000 på mat"
+  const monthMatch = text.match(/(?:maks|månedsmål|bruke maks)\s+(\d[\d\s]*)\s*(?:kr)?\s*(?:på|til)?\s*(.+)?/i);
+  if (monthMatch) {
+    return {
+      type: 'månedsmål',
+      kategori: (monthMatch[2] || 'annet').trim() || 'annet',
+      maksbeløp: parseInt(monthMatch[1].replace(/\s/g, ''), 10),
+    };
+  }
+
+  // Generelt beløp med kategori-hint
+  const beløp = parseAmount(text);
+  if (beløp != null && /(mat|strøm|transport|husleie|bolig)/.test(text)) {
+    const kategori = text.match(/(mat|strøm|transport|husleie|bolig)/)[1];
+    return { type: 'utgift', kategori, beløp };
+  }
+
+  return {
+    type: 'ikke-relatert',
+    melding: 'Klarte ikke tolke meldingen. Bruk skjemaene, eller skriv f.eks. «brukte 300 kr på mat».',
+  };
 }
 
 module.exports = { interpretMessage };

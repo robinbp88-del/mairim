@@ -27,11 +27,11 @@ app.post('/api/interpret', async (req, res) => {
   }
 
   try {
-    const svar = await interpretMessage(message);
+    const svar = interpretMessage(message);
     res.json(svar);
   } catch (err) {
     console.error('Feil i interpretMessage:', err);
-    res.status(500).json({ error: 'Uventet feil i modellen' });
+    res.status(500).json({ error: 'Uventet feil ved tolking' });
   }
 });
 

@@ -1,7 +1,7 @@
-import StepFlow from './StepFlow';
+import OnboardingFlow from './OnboardingFlow';
 
 function App() {
-  return <StepFlow />;
+  return <OnboardingFlow />;
 }
 
 export default App;

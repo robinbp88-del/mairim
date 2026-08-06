@@ -1,26 +1,19 @@
-/* src/OnboardingFlow.module.css */
-
 .container {
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
-  background: radial-gradient(circle at center, #1a1a1a 0%, #0d0d0d 100%);
-  color: #f0f0f0;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: visible;
+  min-height: 100dvh;
+  padding: 48px 20px 48px;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(52, 211, 153, 0.08), transparent 55%),
+    var(--mairim-bg);
+  color: var(--mairim-text);
 }
 
 .matrixCanvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  opacity: 0.2;
-  pointer-events: none;
+  display: none;
 }
 
 .welcome {
@@ -28,77 +21,123 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  min-height: calc(100dvh - 80px);
 }
 
 .welcomeContent {
   text-align: center;
-  max-width: 600px;
-  padding: 48px;
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 32px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 2px solid #00f0ff;
-  border-radius: 16px;
-  box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00c8;
-  animation: pulseGlow 3s infinite, fadeIn 1.5s ease-out;
-  background-color: rgba(0, 0, 0, 0.5);
+  gap: 16px;
+  border: 1px solid var(--mairim-border);
+  border-radius: 20px;
+  background: var(--mairim-surface);
+}
+
+.welcomeContent h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--mairim-text);
+}
+
+.welcomeLead {
+  color: var(--mairim-text-muted);
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.privacyNote {
+  color: var(--mairim-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 8px 0 0;
+  max-width: 360px;
+  text-align: center;
+}
+
+.stepProgress {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mairim-text-muted);
+  letter-spacing: 0.01em;
 }
 
 .avatarWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 8px;
 }
 
 .avatarLarge {
-  width: 280px;
-  height: 280px;
+  width: min(160px, 42vw);
+  height: min(160px, 42vw);
   border-radius: 50%;
-  margin-bottom: 24px;
-  box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00c8;
-  animation: pulseGlow 3s infinite;
   object-fit: cover;
   object-position: center top;
+  border: 1px solid var(--mairim-border);
 }
 
 .startButton {
-  background: linear-gradient(135deg, #00c2a8, #ff00c8);
-  color: white;
+  appearance: none;
+  background: var(--mairim-text);
+  color: var(--mairim-bg);
   padding: 14px 28px;
   border: none;
-  border-radius: 10px;
-  font-size: 18px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 24px;
-  font-weight: bold;
-  box-shadow: 0 0 14px #00f0ff;
-  animation: pulseButton 2s infinite;
-  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 12px;
+  min-height: 48px;
+  width: 100%;
+  max-width: 280px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .startButton:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 24px #ff00c8;
+  opacity: 0.92;
 }
 
-/* Animations */
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 30px #00f0ff, 0 0 60px #ff00c8;
+.startButton:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px 12px 32px;
   }
-  50% {
-    box-shadow: 0 0 50px #00f0ff, 0 0 80px #ff00c8;
+
+  .welcome {
+    min-height: auto;
+    padding-top: 24px;
+  }
+
+  .welcomeContent {
+    padding: 28px 20px;
+  }
+
+  .startButton {
+    max-width: none;
   }
 }
 
-@keyframes pulseButton {
-  0%, 100% { box-shadow: 0 0 14px #00f0ff; }
-  50% { box-shadow: 0 0 28px #ff00c8; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .startButton {
+    transition: none;
+  }
 }

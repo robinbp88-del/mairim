@@ -1,98 +1,170 @@
 // src/OnboardingFlow.js
-import React, { useState, useEffect } from 'react';
-import Step1Household from './Step1Household';
-import Step2Income from './Step2Income';
+import React, { useState, useEffect, useRef } from 'react';
+import Step1Economy from './Step1Economy';
 import Step3Expenses from './Step3Expenses';
 import Step4Goals from './Step4Goals';
-import Step5Summary from './Step5Summary';
 import Step6Budget from './Step6Budget';
 import BudgetDashboard from './BudgetDashboard';
 import layout from './OnboardingFlow.module.css';
 import avatarImage from './assets/ai-mairim.png';
+import { clearState, loadState, saveState } from './utils/storage';
+import { applyDuePeriodRollovers } from './utils/periodEngine';
+
+const DASHBOARD_STEP = 5;
+
+export function hasRequiredProfileData(profile) {
+  if (!profile || typeof profile !== 'object') return false;
+  // Saldo kan midlertidig være tom mens brukeren redigerer — 0 og '' er OK
+  const hasAdults = profile.adults === 0 || !!profile.adults;
+  return !!profile.nextPayoutDate && hasAdults;
+}
+
+export function isSetupComplete(profile) {
+  if (!profile) return false;
+  // Fullført oppsett skal ikke miste dashboard fordi saldo midlertidig er tom
+  if (profile.onboardingComplete) return true;
+  if (profile.budgetPlan && hasRequiredProfileData(profile)) return true;
+  return false;
+}
+
+function migrateProfile(profile) {
+  if (!profile || typeof profile !== 'object') return {};
+  const next = { ...profile };
+  if (!next.onboardingComplete && next.budgetPlan && hasRequiredProfileData(next)) {
+    next.onboardingComplete = true;
+  }
+  return next;
+}
+
+function migrateStep(rawStep, profile) {
+  if (isSetupComplete(profile)) return DASHBOARD_STEP;
+
+  // Bare kast til start hvis oppsett aldri er fullført
+  if (rawStep === DASHBOARD_STEP && !profile?.onboardingComplete && !profile?.budgetPlan) {
+    return 0;
+  }
+
+  const legacyMap = {
+    0: 0,
+    1: 1,
+    2: 1,
+    3: 2,
+    4: 3,
+    5: 4,
+    6: 4,
+    7: 5,
+  };
+
+  if (Object.prototype.hasOwnProperty.call(legacyMap, rawStep)) {
+    return legacyMap[rawStep];
+  }
+
+  return Math.min(Math.max(rawStep ?? 0, 0), DASHBOARD_STEP);
+}
+
+function getInitialState() {
+  const saved = loadState();
+  if (!saved) return { step: 0, profile: {} };
+
+  let profile = migrateProfile(saved.profile || {});
+  if (isSetupComplete(profile)) {
+    profile = applyDuePeriodRollovers(profile);
+  }
+  return {
+    step: migrateStep(saved.step, profile),
+    profile,
+  };
+}
 
 function OnboardingFlow() {
-  const [step, setStep] = useState(0);
-  const [profile, setProfile] = useState({});
+  const [step, setStep] = useState(() => getInitialState().step);
+  const [profile, setProfile] = useState(() => getInitialState().profile);
+  const periodChecked = useRef(false);
 
-  const next = () => setStep(prev => prev + 1);
-  const back = () => setStep(prev => Math.max(0, prev - 1));
+  const next = () => setStep((prev) => prev + 1);
+  const back = () => setStep((prev) => Math.max(0, prev - 1));
 
-  // 🎥 Matrix-symbol-animasjon
   useEffect(() => {
-    const canvas = document.getElementById('matrixCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    saveState({ profile, step });
+  }, [profile, step]);
 
-    const symbols = 'π ∑ √ x y z 0 1 2 3 4 5 6 7 8 9 + - / * ='.split('');
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
-
-    function draw() {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#00f0ff';
-      ctx.font = `${fontSize}px monospace`;
-
-      for (let i = 0; i < drops.length; i++) {
-        const text = symbols[Math.floor(Math.random() * symbols.length)];
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-        drops[i]++;
-      }
-    }
-
-    const interval = setInterval(draw, 50);
-    return () => clearInterval(interval);
+  // Ekstra sjekk ved mount (f.eks. hvis state allerede var i minnet)
+  useEffect(() => {
+    if (periodChecked.current) return;
+    periodChecked.current = true;
+    if (!isSetupComplete(profile)) return;
+    setProfile((prev) => applyDuePeriodRollovers(prev));
+    // Kun ved første mount
   }, []);
+
+  // Hold brukeren på dashboard når oppsett er fullført (også etter endringer)
+  useEffect(() => {
+    if (isSetupComplete(profile) && step !== DASHBOARD_STEP) {
+      setStep(DASHBOARD_STEP);
+    }
+    // Ikke kast til start ved midlertidig tom saldo — kun uten fullført oppsett
+    if (
+      step === DASHBOARD_STEP &&
+      !profile?.onboardingComplete &&
+      !profile?.budgetPlan
+    ) {
+      setStep(0);
+    }
+  }, [profile, step]);
+
+  const handleReset = () => {
+    clearState();
+    setProfile({});
+    setStep(0);
+  };
+
+  const totalSteps = 4;
+  const wizardStep = step >= 1 && step <= 4 ? step : null;
 
   return (
     <div className={layout.container}>
-      <canvas id="matrixCanvas" className={layout.matrixCanvas}></canvas>
+      {wizardStep && (
+        <p className={layout.stepProgress}>
+          Steg {wizardStep} av {totalSteps}
+        </p>
+      )}
 
       {step === 0 && (
         <div className={layout.welcome}>
           <div className={layout.welcomeContent}>
             <div className={layout.avatarWrapper}>
-              <img
-                src={avatarImage}
-                alt="Mairim"
-                className={layout.avatarLarge}
-              />
+              <img src={avatarImage} alt="Mairim" className={layout.avatarLarge} />
             </div>
-            <h1 style={{ textShadow: '0 0 8px #00f0ff' }}>Hei! Jeg er Mairim 👋</h1>
-            <p style={{ color: '#ccc', fontSize: '16px' }}>
-              Trykk under for å komme i gang med ditt budsjett.
+            <h1>Hei! Jeg er Mairim</h1>
+            <p className={layout.welcomeLead}>
+              Sett opp budsjettet ditt på noen få steg.
             </p>
-            <button onClick={next} className={layout.startButton}>Kom i gang</button>
+            <p className={layout.privacyNote}>
+              Personvern: Opplysningene dine (saldo, inntekt, utgifter m.m.) lagres bare lokalt i
+              denne nettleseren. Ingenting sendes til en sky-tjeneste i vanlig bruk. Du kan slette
+              alt med «Start oppsett på nytt» på oversikten.
+            </p>
+            <button type="button" onClick={next} className={layout.startButton}>
+              Kom i gang
+            </button>
           </div>
         </div>
       )}
 
       {step === 1 && (
-        <Step1Household profile={profile} setProfile={setProfile} onNext={next} onBack={back} />
+        <Step1Economy profile={profile} setProfile={setProfile} onNext={next} onBack={back} />
       )}
       {step === 2 && (
-        <Step2Income profile={profile} setProfile={setProfile} onNext={next} onBack={back} />
-      )}
-      {step === 3 && (
         <Step3Expenses profile={profile} setProfile={setProfile} onNext={next} onBack={back} />
       )}
-      {step === 4 && (
+      {step === 3 && (
         <Step4Goals profile={profile} setProfile={setProfile} onNext={next} onBack={back} />
       )}
-      {step === 5 && (
-        <Step5Summary profile={profile} onNext={next} onBack={back} />
-      )}
-      {step === 6 && (
+      {step === 4 && (
         <Step6Budget profile={profile} setProfile={setProfile} onNext={next} onBack={back} />
       )}
-      {step === 7 && (
-        <BudgetDashboard profile={profile} setProfile={setProfile} />
+      {step === 5 && (
+        <BudgetDashboard profile={profile} setProfile={setProfile} onReset={handleReset} />
       )}
     </div>
   );

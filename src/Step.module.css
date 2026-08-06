@@ -1,81 +1,298 @@
-/* src/Step.module.css */
-
 .stepContainer {
-  background-color: #0d0d0d;
-  color: #f0f0f0;
-  padding: 40px;
-  border-radius: 12px;
+  background: var(--mairim-surface);
+  color: var(--mairim-text);
+  padding: 32px;
+  border-radius: var(--mairim-radius);
   width: 100%;
-  max-width: 600px;
+  max-width: 560px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 0 20px #00f0ff, 0 0 40px #ff00c8;
-  border: 1px solid #00f0ff;
-  animation: pulseGlow 3s infinite;
+  gap: var(--mairim-space);
+  border: 1px solid var(--mairim-border);
 }
 
-input,
-select {
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  background-color: #1a1a1a;
-  color: #f0f0f0;
-  box-shadow: inset 0 0 8px #00f0ff;
-  transition: background-color 0.3s;
+.stepContainer h2,
+.stepContainer h3,
+.stepContainer h4 {
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
-input:focus,
-select:focus {
-  background-color: #2a2a2a;
+.stepContainer h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.stepContainer h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.stepContainer h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mairim-text-muted);
+}
+
+.stepContainer p {
+  margin: 0;
+  color: var(--mairim-text-muted);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.stepContainer section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mairim-border);
+}
+
+.stepContainer section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.stepContainer label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mairim-text-muted);
+  margin-bottom: -8px;
+}
+
+.stepContainer input,
+.stepContainer select,
+.field {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--mairim-radius-sm);
+  border: 1px solid var(--mairim-border);
+  background: var(--mairim-bg);
+  color: var(--mairim-text);
+  font-size: 16px;
   outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.stepContainer input::placeholder,
+.field::placeholder {
+  color: #71717a;
+}
+
+.stepContainer input:focus,
+.stepContainer select:focus,
+.field:focus {
+  border-color: var(--mairim-border-strong);
+  background: var(--mairim-surface-2);
+}
+
+.stepContainer button {
+  touch-action: manipulation;
+}
+
+.inlineField {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inlineField input {
+  width: 140px;
+  flex: 0 1 auto;
+}
+
+.muted {
+  color: var(--mairim-text-muted);
+  font-size: 13px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mairim-text);
+  font-size: 14px;
+}
+
+.metaRow strong {
+  font-weight: 600;
+  color: var(--mairim-text-muted);
+}
+
+.formRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.formRow input,
+.formRow > * {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: var(--mairim-radius-sm);
+  background: var(--mairim-bg);
+  border: 1px solid var(--mairim-border);
+  color: var(--mairim-text);
+  font-size: 14px;
+}
+
+.progressTrack {
+  background: var(--mairim-bg);
+  border-radius: 999px;
+  overflow: hidden;
+  height: 8px;
+  border: 1px solid var(--mairim-border);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--mairim-accent);
+  transition: width 0.4s ease;
+}
+
+.progressFillWarn {
+  background: var(--mairim-danger);
 }
 
 .nextButton {
-  background: linear-gradient(135deg, #00c2a8, #ff00c8);
-  color: white;
-  padding: 12px 24px;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--mairim-text);
+  color: var(--mairim-bg);
+  padding: 12px 18px;
   border: none;
-  border-radius: 8px;
-  margin-top: 20px;
+  border-radius: 999px;
+  margin-top: 4px;
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 0 12px #00f0ff;
-  transition: transform 0.2s, box-shadow 0.2s;
+  font-weight: 600;
+  font-size: 14px;
+  min-height: 44px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .nextButton:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px #ff00c8;
+  opacity: 0.92;
 }
 
-/* Spinner */
-.spinner {
-  display: inline-block;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 6px solid #00f0ff;
-  border-top: 6px solid #ff00c8;
-  animation: spin 1s linear infinite;
-  box-shadow: 0 0 20px #00f0ff, 0 0 40px #ff00c8;
-  margin: 20px auto;
+.nextButton:active {
+  transform: scale(0.98);
 }
 
-/* Glow animation */
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px #00f0ff, 0 0 40px #ff00c8;
+.secondaryButton {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--mairim-text);
+  padding: 12px 18px;
+  border: 1px solid var(--mairim-border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 560;
+  font-size: 14px;
+  min-height: 44px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.secondaryButton:hover {
+  background: var(--mairim-surface-2);
+  border-color: var(--mairim-border-strong);
+}
+
+.ghostButton {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--mairim-surface-2);
+  color: var(--mairim-text);
+  border: 1px solid var(--mairim-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.buttonRow .nextButton,
+.buttonRow .secondaryButton {
+  margin-top: 0;
+  flex: 1 1 140px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--mairim-text-muted);
+  font-style: normal;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .stepContainer {
+    padding: 22px 16px;
+    gap: 20px;
+    max-width: 100%;
   }
-  50% {
-    box-shadow: 0 0 40px #00f0ff, 0 0 60px #ff00c8;
+
+  .stepContainer h2 {
+    font-size: 1.2rem;
+  }
+
+  .nextButton,
+  .secondaryButton {
+    width: 100%;
+  }
+
+  .inlineField input {
+    width: 100%;
+    flex: 1 1 100%;
   }
 }
 
-/* Spinner animation */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@media (prefers-reduced-motion: reduce) {
+  .nextButton,
+  .progressFill {
+    transition: none;
+  }
 }
